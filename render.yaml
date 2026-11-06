@@ -1,0 +1,36 @@
+# Render 免费层部署配置（固定子域名 https://<name>.onrender.com）
+# 用法：把本目录推到 GitHub 仓库，在 Render 新建 Blueprint，选择该仓库即可自动读取本文件
+#
+# 重要：
+# 1. Render 免费 Web Service 空闲 15 分钟会休眠，首次请求冷启动 30–60 秒。
+#    Circle 上架后有持续健康检查，休眠会导致判定不可达 → 需要用免费监控（如 UptimeRobot，
+#    每 10 分钟访问一次 /health）做保活，否则不要提交上架。
+# 2. UPSTREAMS 含 API Key，标 sync: false 表示不在仓库里存明文，部署后在 Render 面板手动填入。
+# 3. PORT 由 Render 自动注入，无需在此声明，server.js 已从环境变量读取。
+
+services:
+  - type: web
+    name: x402-vision-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SELLER_ADDRESS
+        value: 0x602087C27FD3A13EeF18176Fcfb15cec3DBaeE56
+      - key: PRICE_VISION
+        value: $0.02
+      - key: MAX_RETRIES
+        value: "3"
+      - key: RETRY_BASE_MS
+        value: "1200"
+      - key: BREAKER_THRESHOLD
+        value: "3"
+      - key: BREAKER_COOLDOWN_MS
+        value: "60000"
+      - key: UPSTREAMS
+        sync: false

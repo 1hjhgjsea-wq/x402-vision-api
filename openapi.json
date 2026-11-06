@@ -1,0 +1,76 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vision Describe API",
+    "version": "1.0.0",
+    "description": "Vision-language understanding over x402. POST a public image URL (or a data: URL) plus an optional question, and receive a short natural-language answer. Billing is per successful call in USDC, settled on-chain or via Circle Gateway. No API keys, no accounts: the 402 response carries everything needed to pay."
+  },
+  "servers": [
+    {
+      "url": "https://YOUR-DOMAIN-HERE",
+      "description": "Production endpoint (replace with your deployed host)"
+    }
+  ],
+  "paths": {
+    "/v1/vision/describe": {
+      "post": {
+        "operationId": "visionDescribe",
+        "summary": "Describe or answer a question about an image",
+        "description": "Paid endpoint. An unpaid request returns 402 Payment Required with a PAYMENT-REQUIRED header listing accepted chains, asset, amount and payTo. A request carrying a valid x402 payment is settled first, then answered.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "description": "Publicly reachable https URL, or a data URL of the form data:image/png;base64,..."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "Question to ask about the image. Defaults to a general description."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "text": { "type": "string" },
+                    "model": { "type": "string" },
+                    "tokens": { "type": "number" }
+                  },
+                  "required": ["text"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing or malformed image field" },
+          "402": {
+            "description": "Payment required. Payment options are in the PAYMENT-REQUIRED response header (base64-encoded JSON)."
+          },
+          "502": { "description": "Upstream model provider error" },
+          "503": { "description": "Server upstream not configured" }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Liveness probe",
+        "description": "Free. Used for continuous health checks after listing.",
+        "responses": { "200": { "description": "Service is up" } }
+      }
+    }
+  }
+}
