@@ -92,12 +92,21 @@ function parseUpstreams() {
       const arr = JSON.parse(raw);
       const ok = (Array.isArray(arr) ? arr : []).filter(u => u && u.base && u.key && u.model);
       if (ok.length) return ok.map((u, i) => ({ name: u.name || `up${i}`, base: u.base, key: u.key, model: u.model }));
-      console.error('[warn] UPSTREAMS 为空或字段缺失，回退单上游配置');
+      console.error('[warn] UPSTREAMS 为空或字段缺失，回退单 Key 多模型配置');
     } catch (e) {
-      console.error('[warn] UPSTREAMS 解析失败，回退单上游配置：', e.message);
+      console.error('[warn] UPSTREAMS 解析失败，回退单 Key 多模型配置：', e.message);
     }
   }
-  return UPSTREAM_KEY ? [{ name: 'default', base: UPSTREAM_BASE, key: UPSTREAM_KEY, model: VISION_MODEL }] : [];
+
+  // 只配一个 Key 时：自动生成多模型降级链，省去逐条配置
+  if (!UPSTREAM_KEY) return [];
+  const list = (process.env.VISION_MODELS || 'glm-4v-flash,glm-4.5v,glm-4.1v-thinking-flash')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  // 若单独指定了 VISION_MODEL，提到最前面作为首选
+  if (VISION_MODEL && !list.includes(VISION_MODEL)) list.unshift(VISION_MODEL);
+  return list.map(m => ({ name: `zhipu:${m}`, base: UPSTREAM_BASE, key: UPSTREAM_KEY, model: m }));
 }
 
 const UPSTREAMS = parseUpstreams();

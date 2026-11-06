@@ -32,5 +32,7 @@ services:
         value: "3"
       - key: BREAKER_COOLDOWN_MS
         value: "60000"
-      - key: UPSTREAMS
+      - key: UPSTREAM_KEY
         sync: false
+      - key: VISION_MODELS
+        value: glm-4v-flash,glm-4.5v,glm-4.1v-thinking-flash
